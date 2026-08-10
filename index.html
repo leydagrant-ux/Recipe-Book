@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Recipes</title>
+<meta name="theme-color" content="#a8401c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Recipes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<style>
+:root{
+  --paper:#f5eddf; --paper-2:#fdfaf4; --ink:#2c2118; --ink-soft:#6d6052;
+  --rule:#ded0b8; --accent:#a8401c; --accent-soft:#f3e4d7; --error:#9c2b1c;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --radius:4px;
+  --shadow:0 1px 2px rgba(60,42,24,.07),0 6px 16px rgba(60,42,24,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#16120e; --paper-2:#201a14; --ink:#f1e7d7; --ink-soft:#a2917c;
+    --rule:#382d22; --accent:#e5824f; --accent-soft:#2b1e15; --error:#ef8878;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 16px rgba(0,0,0,.3);
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background-color:var(--paper);
+  background-image:radial-gradient(120% 70% at 50% 0%,rgba(255,255,255,.5),rgba(255,255,255,0) 60%);
+  color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;
+  padding-bottom:calc(32px + env(safe-area-inset-bottom));
+}
+@media (prefers-color-scheme:dark){
+  body{background-image:radial-gradient(120% 70% at 50% 0%,rgba(229,130,79,.07),rgba(0,0,0,0) 60%)}
+}
+@media (min-width:720px){body{max-width:860px;margin:0 auto}}
+.view[hidden]{display:none}
+.pad{padding:0 20px}
+
+.bar{
+  position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:8px;
+  padding:calc(14px + env(safe-area-inset-top)) 16px 12px;
+  background:var(--paper);border-bottom:1px solid var(--rule);
+  box-shadow:0 3px 0 -2px var(--rule);
+}
+.bar h1{
+  flex:1;margin:0;font-family:var(--serif);font-size:24px;font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#list-view .bar h1{font-variant-caps:small-caps;letter-spacing:.08em;text-align:center}
+.icon-btn{
+  flex:none;width:42px;height:42px;border:1px solid var(--rule);border-radius:50%;
+  background:var(--paper-2);color:var(--accent);font-family:var(--serif);
+  font-size:20px;line-height:1;cursor:pointer;
+}
+.icon-btn:active{background:var(--accent-soft)}
+
+input,button,textarea{font:inherit;font-size:16px}
+input[type=search],input[type=url],input[type=password],input[type=text]{
+  width:100%;min-height:46px;margin:12px 0;padding:10px 14px;
+  border:1px solid var(--rule);border-radius:var(--radius);
+  background:var(--paper-2);color:var(--ink);font-family:var(--serif);-webkit-appearance:none;
+}
+input::placeholder{color:var(--ink-soft);opacity:.75}
+input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+button.primary{
+  width:100%;min-height:50px;border:none;border-radius:var(--radius);
+  background:var(--accent);color:#fdf8f1;font-family:var(--serif);font-size:17px;
+  font-weight:600;letter-spacing:.03em;cursor:pointer;margin-top:4px;
+}
+button.primary:disabled{opacity:.5}
+button.ghost{
+  width:100%;min-height:46px;margin-top:10px;border:1px solid var(--rule);
+  border-radius:var(--radius);background:var(--paper-2);color:var(--accent);
+  font-family:var(--serif);font-weight:600;cursor:pointer;
+}
+
+.cards{display:grid;gap:14px;grid-template-columns:1fr;padding:6px 20px 20px}
+@media (min-width:720px){.cards{grid-template-columns:1fr 1fr}}
+.card{
+  display:flex;gap:14px;padding:0;border:1px solid var(--rule);border-radius:var(--radius);
+  background:var(--paper-2);box-shadow:var(--shadow);overflow:hidden;text-align:left;
+  color:inherit;cursor:pointer;min-height:100px;
+}
+.card:active{border-color:var(--accent)}
+.card img,.card .noimg{flex:none;width:96px;object-fit:cover;background:var(--accent-soft)}
+.card .noimg{
+  display:flex;align-items:center;justify-content:center;color:var(--accent);
+  font-family:var(--serif);font-size:34px;font-weight:600;opacity:.85;
+}
+.card-text{flex:1;min-width:0;padding:13px 14px 13px 0}
+.card h2{margin:0 0 5px;font-family:var(--serif);font-size:18px;font-weight:600;line-height:1.25}
+.card p{
+  margin:0;color:var(--ink-soft);font-size:13.5px;line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+
+.detail-hero{
+  width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--rule);
+  border-radius:var(--radius);background:var(--accent-soft);box-shadow:var(--shadow);margin:16px 0 4px;
+}
+.recipe-title{margin:18px 0 10px;font-family:var(--serif);font-size:29px;font-weight:600;line-height:1.15}
+.servings{
+  display:inline-block;margin:0;font-size:12px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);
+}
+.detail-body h3{
+  display:flex;align-items:center;gap:12px;margin:32px 0 14px;font-family:var(--serif);
+  font-size:15px;font-weight:600;font-variant-caps:small-caps;letter-spacing:.16em;
+  text-transform:lowercase;color:var(--accent);
+}
+.detail-body h3::before,.detail-body h3::after{content:"";flex:1;height:1px;background:var(--rule)}
+.ing-list,.note-list{margin:0;padding:0;list-style:none}
+.ing-list li{
+  display:flex;gap:14px;align-items:baseline;padding:9px 2px;
+  border-bottom:1px dotted var(--rule);font-family:var(--serif);font-size:17px;
+}
+.ing-list li:last-child{border-bottom:none}
+.ing-list .qty{
+  flex:none;min-width:92px;color:var(--accent);font-weight:600;
+  font-variant-numeric:tabular-nums oldstyle-nums;
+}
+.step-list{margin:0;padding:0;list-style:none;counter-reset:step}
+.step-list li{
+  position:relative;counter-increment:step;padding:0 0 18px 46px;
+  font-family:var(--serif);font-size:17px;line-height:1.6;
+}
+.step-list li::before{
+  content:counter(step);position:absolute;left:0;top:-2px;width:32px;
+  font-size:25px;font-weight:600;color:var(--accent);text-align:right;opacity:.85;
+}
+.note-list li{
+  position:relative;margin-bottom:10px;padding:12px 14px 12px 40px;border-radius:var(--radius);
+  background:var(--accent-soft);font-family:var(--serif);font-style:italic;font-size:16px;
+}
+.note-list li::before{
+  content:"\275B";position:absolute;left:15px;top:11px;font-style:normal;
+  font-size:17px;color:var(--accent);opacity:.65;
+}
+.source-note{
+  margin:34px 0 8px;padding-top:16px;border-top:1px solid var(--rule);
+  color:var(--ink-soft);font-family:var(--serif);font-size:14px;font-style:italic;text-align:center;
+}
+.source-note a{color:var(--ink-soft)}
+
+.muted{color:var(--ink-soft)}
+.error{color:var(--error);font-family:var(--serif)}
+.status{color:var(--ink-soft);font-family:var(--serif);font-style:italic}
+.empty{
+  padding:56px 24px;color:var(--ink-soft);font-family:var(--serif);
+  font-size:17px;font-style:italic;text-align:center;
+}
+.empty::before{
+  content:"\2766";display:block;margin-bottom:14px;font-size:26px;
+  font-style:normal;color:var(--accent);opacity:.5;
+}
+h1.title{margin:0 0 4px;font-family:var(--serif);font-size:31px;font-variant-caps:small-caps;letter-spacing:.06em}
+label{display:block;margin-top:18px;font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+label+input{margin-top:6px}
+a{color:var(--accent)}
+.setup-pad{padding:calc(40px + env(safe-area-inset-top)) 20px 40px}
+.row{display:flex;gap:10px}
+.row button{margin-top:10px}
+</style>
+</head>
+<body>
+
+<!-- ---------- first-run / settings ---------- -->
+<section id="setup-view" class="view" hidden>
+  <div class="setup-pad">
+    <h1 class="title">Recipes</h1>
+    <p class="muted" id="setup-intro">
+      Paste your two API keys. They're stored only on this device and are sent
+      directly to each service — they never pass through anyone else's server.
+    </p>
+
+    <label for="k-supadata">Supadata key</label>
+    <input id="k-supadata" type="password" placeholder="sd_..." autocomplete="off"
+           autocapitalize="off" spellcheck="false">
+
+    <label for="k-anthropic">Anthropic key</label>
+    <input id="k-anthropic" type="password" placeholder="sk-ant-..." autocomplete="off"
+           autocapitalize="off" spellcheck="false">
+
+    <button id="save-keys" class="primary">Save keys</button>
+    <p id="setup-error" class="error" hidden></p>
+
+    <div id="setup-extra" hidden>
+      <p id="storage-report" class="status" style="margin-top:22px"></p>
+      <button id="setup-link-btn" class="ghost">Copy my setup link</button>
+      <button id="export-btn" class="ghost">Back up my recipes to a file</button>
+      <button id="import-btn" class="ghost">Restore from a backup file</button>
+      <input id="import-file" type="file" accept="application/json" hidden>
+      <button id="close-setup" class="ghost">Done</button>
+      <p id="setup-status" class="status" hidden></p>
+    </div>
+  </div>
+</section>
+
+<!-- ---------- index ---------- -->
+<section id="list-view" class="view" hidden>
+  <header class="bar">
+    <button id="open-settings" class="icon-btn" aria-label="Settings">&#9881;</button>
+    <h1>Recipes</h1>
+    <button id="open-add" class="icon-btn" aria-label="Add a recipe">+</button>
+  </header>
+  <div class="pad">
+    <input id="search" type="search" placeholder="Search by title or ingredient"
+           autocomplete="off" autocapitalize="off" spellcheck="false">
+  </div>
+  <div id="cards" class="cards"></div>
+  <p id="list-empty" class="empty" hidden></p>
+</section>
+
+<!-- ---------- one recipe ---------- -->
+<section id="detail-view" class="view" hidden>
+  <header class="bar">
+    <button id="back" class="icon-btn" aria-label="Back">&larr;</button>
+    <h1 id="detail-title"></h1>
+    <button id="delete-recipe" class="icon-btn" aria-label="Delete recipe">&#8998;</button>
+  </header>
+  <div id="detail-body" class="pad detail-body"></div>
+</section>
+
+<!-- ---------- add ---------- -->
+<section id="add-view" class="view" hidden>
+  <header class="bar">
+    <button id="add-back" class="icon-btn" aria-label="Back">&larr;</button>
+    <h1>Add a recipe</h1>
+  </header>
+  <div class="pad">
+    <p class="muted">Paste a link to a cooking video.</p>
+    <input id="add-input" type="url" placeholder="https://www.instagram.com/reel/..."
+           autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button id="add-submit" class="primary">Save recipe</button>
+    <p id="add-status" class="status" hidden></p>
+    <p id="add-error" class="error" hidden></p>
+    <p class="muted" style="margin-top:22px;font-size:14px">
+      Works with Instagram, TikTok, YouTube, X and Facebook links.
+    </p>
+  </div>
+</section>
+
+<script>
+'use strict';
+
+/* ============================ storage ============================ */
+/* Recipes live in this browser's IndexedDB. Pictures are kept as real
+   image data, not links, so a recipe survives the original video being
+   deleted or the platform's image URL expiring. */
+
+const DB_NAME = 'recipeSaver';
+const STORE = 'recipes';
+let dbPromise = null;
+
+function db() {
+  if (!dbPromise) {
+    dbPromise = new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = () => {
+        req.result.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true });
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  return dbPromise;
+}
+
+async function tx(mode, fn) {
+  const conn = await db();
+  return new Promise((resolve, reject) => {
+    const t = conn.transaction(STORE, mode);
+    const store = t.objectStore(STORE);
+    let out;
+    try { out = fn(store); } catch (e) { reject(e); return; }
+    t.oncomplete = () => resolve(out && out.result !== undefined ? out.result : out);
+    t.onerror = () => reject(t.error);
+    t.onabort = () => reject(t.error);
+  });
+}
+
+/* iOS Safari deletes a site's storage after 7 days of not visiting it. Adding
+   the app to the Home Screen exempts it, and so does being granted persistent
+   storage — ask for both rather than relying on either alone. */
+async function requestPersistence() {
+  if (!navigator.storage || !navigator.storage.persist) return null;
+  try {
+    if (await navigator.storage.persisted()) return true;
+    return await navigator.storage.persist();
+  } catch { return null; }
+}
+
+async function storageReport() {
+  const out = { persisted: null, usageMb: null };
+  if (navigator.storage) {
+    try {
+      if (navigator.storage.persisted) out.persisted = await navigator.storage.persisted();
+      if (navigator.storage.estimate) {
+        const est = await navigator.storage.estimate();
+        out.usageMb = est.usage ? (est.usage / 1048576).toFixed(1) : null;
+      }
+    } catch { /* not supported */ }
+  }
+  return out;
+}
+
+const allRecipes = () => tx('readonly', (s) => s.getAll());
+const getRecipe  = (id) => tx('readonly', (s) => s.get(id));
+const putRecipe  = (r) => tx('readwrite', (s) => s.put(r));
+const delRecipe  = (id) => tx('readwrite', (s) => s.delete(id));
+
+/* ============================ keys ============================ */
+
+const KEYS = { supadata: 'rs_supadata_key', anthropic: 'rs_anthropic_key' };
+const getKey = (n) => (localStorage.getItem(KEYS[n]) || '').trim();
+const hasKeys = () => Boolean(getKey('supadata') && getKey('anthropic'));
+
+/* A "setup link" carries the keys in the URL itself.
+
+   On iOS a Home Screen web app gets its own storage, separate from Safari, so
+   keys typed in one do not appear in the other. Bookmarking a setup link means
+   the app can restore its own keys on launch no matter which container it is
+   in, or if storage ever gets cleared. The keys sit in that saved URL, so treat
+   the link like the keys themselves and don't share it. */
+function buildSetupLink() {
+  const payload = `${getKey('supadata')}|${getKey('anthropic')}`;
+  return `${location.origin}${location.pathname}#keys=${encodeURIComponent(payload)}`;
+}
+
+function applyKeysFromHash(params) {
+  const raw = params.get('keys');
+  if (!raw) return false;
+  const [sup, ant] = raw.split('|');
+  if (!sup || !ant) return false;
+  localStorage.setItem(KEYS.supadata, sup.trim());
+  localStorage.setItem(KEYS.anthropic, ant.trim());
+  return true;
+}
+
+/* ============================ services ============================ */
+
+const SUPADATA = 'https://api.supadata.ai/v1';
+
+/* Supadata handles more than Instagram, so accept everything it supports. */
+const URL_PATTERNS = [
+  /^https?:\/\/(?:www\.)?instagram\.com\/(?:[\w.]+\/)?(?:reel|reels|p|tv)\/[\w-]+/i,
+  /^https?:\/\/(?:www\.|vm\.|vt\.)?tiktok\.com\/[^\s]+/i,
+  /^https?:\/\/(?:www\.|m\.)?youtube\.com\/[^\s]+/i,
+  /^https?:\/\/youtu\.be\/[\w-]+/i,
+  /^https?:\/\/(?:www\.)?(?:x|twitter)\.com\/[^\s]+/i,
+  /^https?:\/\/(?:www\.|web\.)?facebook\.com\/[^\s]+/i,
+];
+
+function cleanUrl(raw) {
+  const url = (raw || '').trim();
+  if (!url) throw new Error('Paste a link first.');
+  if (!URL_PATTERNS.some((re) => re.test(url))) {
+    throw new Error('That does not look like a link to a video I can read.');
+  }
+  // Drop tracking parameters so the same video shared twice is recognised.
+  try {
+    const u = new URL(url);
+    u.search = '';
+    u.hash = '';
+    return u.toString().replace(/\/$/, '');
+  } catch { return url; }
+}
+
+async function supadata(path, params) {
+  const qs = new URLSearchParams(params).toString();
+  const res = await fetch(`${SUPADATA}${path}${qs ? '?' + qs : ''}`, {
+    headers: { 'x-api-key': getKey('supadata') },
+  });
+  return res;
+}
+
+async function fetchMetadata(url) {
+  try {
+    const res = await supadata('/metadata', { url });
+    if (!res.ok) return { caption: '', thumbnail: null };
+    const d = await res.json();
+    return {
+      caption: d.description || d.title || '',
+      thumbnail: (d.media && d.media.thumbnailUrl) || null,
+    };
+  } catch { return { caption: '', thumbnail: null }; }
+}
+
+async function fetchTranscript(url, onProgress) {
+  const res = await supadata('/transcript', { url, text: 'true', mode: 'auto' });
+
+  if (res.status === 200) return (await res.json()).content || '';
+  if (res.status === 206) return '';           // no transcript; caption may still carry it
+  if (res.status === 401) throw new Error('Supadata rejected your API key.');
+  if (res.status === 403) throw new Error('That video is private or restricted.');
+  if (res.status === 404) throw new Error('That video could not be found.');
+  if (res.status === 429) throw new Error('Supadata rate limit or monthly credits exceeded.');
+
+  if (res.status === 202) {
+    // Long video: Supadata is generating the transcript in the background.
+    const { jobId } = await res.json();
+    if (!jobId) throw new Error('Supadata started a job but gave no job id.');
+    const deadline = Date.now() + 90000;
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 1500));
+      onProgress && onProgress('Still transcribing the audio…');
+      const poll = await supadata(`/transcript/${jobId}`, {});
+      if (!poll.ok) throw new Error(`Supadata returned ${poll.status} while transcribing.`);
+      const d = await poll.json();
+      if (d.status === 'completed') {
+        return Array.isArray(d.content)
+          ? d.content.map((c) => c.text || '').join(' ')
+          : (d.content || '');
+      }
+      if (d.status === 'failed') throw new Error('Supadata could not transcribe that video.');
+    }
+    throw new Error('Transcribing took too long. Try a shorter video.');
+  }
+  throw new Error(`Supadata returned ${res.status}.`);
+}
+
+const RECIPE_SCHEMA = {
+  type: 'object',
+  properties: {
+    is_recipe: { type: 'boolean' },
+    title: { type: 'string' },
+    servings: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+    ingredients: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          quantity: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+          item: { type: 'string' },
+        },
+        required: ['quantity', 'item'],
+        additionalProperties: false,
+      },
+    },
+    steps: { type: 'array', items: { type: 'string' } },
+    notes: { type: 'array', items: { type: 'string' } },
+  },
+  required: ['is_recipe', 'title', 'servings', 'ingredients', 'steps', 'notes'],
+  additionalProperties: false,
+};
+
+const PROMPT = `Below is the spoken transcript and caption from a cooking video.
+Extract the recipe into the given structure.
+
+Rules:
+- Use only what the creator states or clearly implies. Never invent a quantity
+  you were not given — set quantity to null instead.
+- quantity is the amount as spoken ("2 cups", "a big pinch", "1 tbsp"), item is
+  the ingredient itself ("all-purpose flour"). Keep prep notes with the item
+  ("garlic, minced").
+- steps: one action per entry, in the order performed, no leading numbers.
+- notes: the creator's own substitutions, storage advice, serving suggestions,
+  and any tips that are not a cooking step.
+- servings: only if stated (e.g. "serves 4"), otherwise null.
+- If this video is not a recipe at all, set is_recipe to false and leave the
+  other fields empty.
+
+Transcript and caption:
+---
+{{SOURCE}}
+---`;
+
+async function extractRecipe(sourceText) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': getKey('anthropic'),
+      'anthropic-version': '2023-06-01',
+      // Required for calling the API straight from a browser.
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-opus-5',
+      max_tokens: 8000,
+      output_config: { effort: 'low', format: { type: 'json_schema', schema: RECIPE_SCHEMA } },
+      messages: [{ role: 'user', content: PROMPT.replace('{{SOURCE}}', sourceText) }],
+    }),
+  });
+
+  if (res.status === 401) throw new Error('Anthropic rejected your API key.');
+  if (res.status === 400) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(`Anthropic rejected the request: ${(e.error && e.error.message) || 'bad request'}`);
+  }
+  if (res.status === 429) throw new Error('Anthropic rate limit hit. Wait a moment and try again.');
+  if (!res.ok) throw new Error(`Anthropic returned ${res.status}.`);
+
+  const data = await res.json();
+  if (data.stop_reason === 'refusal') throw new Error('Claude declined to process that video.');
+  const block = (data.content || []).find((b) => b.type === 'text');
+  if (!block) throw new Error('Claude returned no recipe.');
+  return JSON.parse(block.text);
+}
+
+/* The picture is stored as real image data. Some platforms' image servers
+   refuse cross-origin reads; if that happens we fall back to remembering the
+   link, and you can attach your own photo instead. */
+async function downloadImage(imageUrl) {
+  if (!imageUrl) return null;
+  try {
+    const res = await fetch(imageUrl);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    if (!blob.type.startsWith('image/') || blob.size > 5 * 1024 * 1024) return null;
+    return blob;
+  } catch { return null; }
+}
+
+/* ============================ save flow ============================ */
+
+async function saveRecipe(rawUrl, onProgress) {
+  const url = cleanUrl(rawUrl);
+
+  const existing = (await allRecipes()).find((r) => r.reelUrl === url);
+  if (existing) return { recipe: existing, alreadySaved: true };
+
+  onProgress('Reading the video…');
+  const { caption, thumbnail } = await fetchMetadata(url);
+
+  onProgress('Getting the spoken transcript…');
+  const transcript = await fetchTranscript(url, onProgress);
+
+  const parts = [];
+  if (caption) parts.push('CAPTION:\n' + caption);
+  if (transcript) parts.push('TRANSCRIPT:\n' + transcript);
+  const sourceText = parts.join('\n\n').trim();
+  if (!sourceText) throw new Error('That video has no caption or spoken words to read.');
+
+  onProgress('Writing up the recipe…');
+  const parsed = await extractRecipe(sourceText);
+  if (!parsed.is_recipe) throw new Error('That video does not look like a recipe.');
+  if (!parsed.ingredients.length && !parsed.steps.length) {
+    throw new Error('No ingredients or steps could be found in that video.');
+  }
+
+  const image = await downloadImage(thumbnail);
+
+  const record = {
+    reelUrl: url,
+    title: parsed.title,
+    servings: parsed.servings,
+    ingredients: parsed.ingredients,
+    steps: parsed.steps,
+    notes: parsed.notes,
+    image,                       // Blob, or null
+    imageUrl: image ? null : thumbnail,
+    sourceText,
+    createdAt: new Date().toISOString(),
+  };
+  record.id = await putRecipe(record);
+  return { recipe: record, alreadySaved: false };
+}
+
+/* ============================ views ============================ */
+
+const $ = (id) => document.getElementById(id);
+const VIEWS = ['setup-view', 'list-view', 'detail-view', 'add-view'];
+const show = (id) => { VIEWS.forEach((v) => { $(v).hidden = v !== id; }); window.scrollTo(0, 0); };
+
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g,
+  (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+let cache = [];              // all recipes, newest first
+const blobUrls = new Map();  // id -> object URL, so re-renders don't re-create them
+
+function pictureFor(r) {
+  if (r.image) {
+    if (!blobUrls.has(r.id)) blobUrls.set(r.id, URL.createObjectURL(r.image));
+    return blobUrls.get(r.id);
+  }
+  return r.imageUrl || null;
+}
+
+function renderList(filter = '') {
+  const q = filter.trim().toLowerCase();
+  const shown = q
+    ? cache.filter((r) => r.title.toLowerCase().includes(q) ||
+        r.ingredients.some((i) => (i.item || '').toLowerCase().includes(q)))
+    : cache;
+
+  $('cards').innerHTML = shown.map((r) => {
+    const first = (r.title.trim().charAt(0) || '?').toUpperCase();
+    const initial = /[A-Z0-9]/.test(first) ? first : '&#10086;';
+    const pic = pictureFor(r);
+    const preview = r.ingredients.slice(0, 4).map((i) => i.item).join(', ');
+    return `<button class="card" data-id="${r.id}">
+      ${pic ? `<img src="${escapeHtml(pic)}" alt="" loading="lazy">`
+            : `<div class="noimg">${initial}</div>`}
+      <div class="card-text">
+        <h2>${escapeHtml(r.title)}</h2>
+        <p>${escapeHtml(preview)}</p>
+      </div></button>`;
+  }).join('');
+
+  const empty = $('list-empty');
+  empty.hidden = shown.length > 0;
+  empty.textContent = cache.length === 0
+    ? 'No recipes yet. Tap + to save your first video.'
+    : `No recipes match "${filter.trim()}".`;
+}
+
+async function refresh() {
+  cache = (await allRecipes()).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  renderList($('search').value);
+}
+
+let openId = null;
+
+async function openDetail(id) {
+  const r = await getRecipe(id);
+  if (!r) return;
+  openId = id;
+  $('detail-title').textContent = r.title;
+
+  const pic = pictureFor(r);
+  const parts = [];
+  if (pic) parts.push(`<img class="detail-hero" src="${escapeHtml(pic)}" alt="" onerror="this.remove()">`);
+  parts.push(`<h2 class="recipe-title">${escapeHtml(r.title)}</h2>`);
+  if (r.servings) parts.push(`<p class="servings">${escapeHtml(r.servings)}</p>`);
+
+  if (r.ingredients.length) {
+    parts.push('<h3>Ingredients</h3><ul class="ing-list">' + r.ingredients.map((i) =>
+      `<li><span class="qty">${escapeHtml(i.quantity || '')}</span><span>${escapeHtml(i.item)}</span></li>`
+    ).join('') + '</ul>');
+  }
+  if (r.steps.length) {
+    parts.push('<h3>Method</h3><ol class="step-list">' +
+      r.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join('') + '</ol>');
+  }
+  if (r.notes.length) {
+    parts.push('<h3>Notes</h3><ul class="note-list">' +
+      r.notes.map((n) => `<li>${escapeHtml(n)}</li>`).join('') + '</ul>');
+  }
+
+  parts.push(`<button class="ghost" id="photo-btn">Use my own photo</button>
+              <input id="photo-file" type="file" accept="image/*" hidden>`);
+  parts.push(`<p class="source-note">Saved from
+    <a href="${escapeHtml(r.reelUrl)}" target="_blank" rel="noopener">the original video</a></p>`);
+
+  $('detail-body').innerHTML = parts.join('');
+  $('photo-btn').addEventListener('click', () => $('photo-file').click());
+  $('photo-file').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const rec = await getRecipe(id);
+    rec.image = file;
+    rec.imageUrl = null;
+    await putRecipe(rec);
+    const old = blobUrls.get(id);
+    if (old) { URL.revokeObjectURL(old); blobUrls.delete(id); }
+    await refresh();
+    openDetail(id);
+  });
+
+  show('detail-view');
+}
+
+/* ============================ backup ============================ */
+
+const blobToDataUrl = (blob) => new Promise((resolve) => {
+  const fr = new FileReader();
+  fr.onload = () => resolve(fr.result);
+  fr.readAsDataURL(blob);
+});
+
+async function dataUrlToBlob(dataUrl) {
+  return await (await fetch(dataUrl)).blob();
+}
+
+async function exportBackup() {
+  const rows = await allRecipes();
+  const out = [];
+  for (const r of rows) {
+    const copy = { ...r };
+    copy.image = r.image ? await blobToDataUrl(r.image) : null;
+    out.push(copy);
+  }
+  const payload = JSON.stringify({ exportedAt: new Date().toISOString(), recipes: out }, null, 1);
+  const url = URL.createObjectURL(new Blob([payload], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `recipes-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  return rows.length;
+}
+
+async function importBackup(file) {
+  const text = await file.text();
+  const data = JSON.parse(text);
+  if (!Array.isArray(data.recipes)) throw new Error('That file is not a recipe backup.');
+  const existing = await allRecipes();
+  const seen = new Set(existing.map((r) => r.reelUrl));
+  let added = 0;
+  for (const r of data.recipes) {
+    if (seen.has(r.reelUrl)) continue;      // never duplicate on restore
+    const rec = { ...r };
+    delete rec.id;
+    rec.image = r.image ? await dataUrlToBlob(r.image) : null;
+    await putRecipe(rec);
+    added++;
+  }
+  return added;
+}
+
+/* ============================ wiring ============================ */
+
+$('search').addEventListener('input', (e) => renderList(e.target.value));
+
+$('cards').addEventListener('click', (e) => {
+  const card = e.target.closest('.card');
+  if (card) openDetail(Number(card.dataset.id));
+});
+
+$('back').addEventListener('click', () => show('list-view'));
+$('add-back').addEventListener('click', () => show('list-view'));
+
+$('delete-recipe').addEventListener('click', async () => {
+  if (openId == null) return;
+  const r = await getRecipe(openId);
+  if (!confirm(`Delete "${r.title}"? This cannot be undone.`)) return;
+  await delRecipe(openId);
+  const old = blobUrls.get(openId);
+  if (old) { URL.revokeObjectURL(old); blobUrls.delete(openId); }
+  openId = null;
+  await refresh();
+  show('list-view');
+});
+
+$('open-add').addEventListener('click', () => {
+  $('add-input').value = '';
+  $('add-status').hidden = true;
+  $('add-error').hidden = true;
+  show('add-view');
+  $('add-input').focus();
+});
+
+$('add-submit').addEventListener('click', async () => {
+  const btn = $('add-submit');
+  const status = $('add-status');
+  const error = $('add-error');
+  const url = $('add-input').value;
+
+  btn.disabled = true;
+  error.hidden = true;
+  status.hidden = false;
+  const progress = (msg) => { status.textContent = msg; };
+  progress('Starting…');
+
+  try {
+    const { recipe, alreadySaved } = await saveRecipe(url, progress);
+    status.textContent = alreadySaved ? 'Already saved.' : 'Saved.';
+    $('add-input').value = '';
+    await refresh();
+    setTimeout(() => openDetail(recipe.id), 300);
+  } catch (err) {
+    status.hidden = true;
+    error.hidden = false;
+    error.textContent = err.message;
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* ---- settings ---- */
+
+$('open-settings').addEventListener('click', async () => {
+  $('k-supadata').value = getKey('supadata');
+  $('k-anthropic').value = getKey('anthropic');
+  $('setup-extra').hidden = false;
+
+  // Tell the truth about where the data stands, rather than making them guess.
+  const [{ persisted, usageMb }, rows] = await Promise.all([storageReport(), allRecipes()]);
+  const count = `${rows.length} recipe${rows.length === 1 ? '' : 's'} saved`;
+  const size = usageMb ? `, using ${usageMb} MB` : '';
+  const safety = persisted === true
+    ? 'Storage is marked permanent — this browser will not clear it automatically.'
+    : 'Storage is not marked permanent yet. Add the app to your Home Screen, ' +
+      'which protects it, and keep a backup file.';
+  $('storage-report').textContent = `${count}${size}. ${safety}`;
+  $('setup-intro').textContent =
+    'Your keys are stored only on this device. Back up your recipes here too — ' +
+    'they live in this browser, so a backup is the way to move or keep them.';
+  show('setup-view');
+});
+
+$('close-setup').addEventListener('click', () => show('list-view'));
+
+$('save-keys').addEventListener('click', async () => {
+  const sup = $('k-supadata').value.trim();
+  const ant = $('k-anthropic').value.trim();
+  const err = $('setup-error');
+  if (!sup || !ant) {
+    err.hidden = false;
+    err.textContent = 'Both keys are needed.';
+    return;
+  }
+  localStorage.setItem(KEYS.supadata, sup);
+  localStorage.setItem(KEYS.anthropic, ant);
+  err.hidden = true;
+  await refresh();
+  show('list-view');
+});
+
+$('setup-link-btn').addEventListener('click', async () => {
+  const s = $('setup-status');
+  s.hidden = false;
+  if (!hasKeys()) { s.textContent = 'Save both keys first.'; return; }
+  const link = buildSetupLink();
+  try {
+    await navigator.clipboard.writeText(link);
+    s.textContent = 'Setup link copied. Open it on your phone, then Add to Home Screen — ' +
+                    'that icon will never ask for your keys again. Treat the link like the keys.';
+  } catch {
+    // Clipboard blocked (common in non-secure contexts) — show it to copy by hand.
+    s.textContent = link;
+  }
+});
+
+$('export-btn').addEventListener('click', async () => {
+  const s = $('setup-status');
+  s.hidden = false;
+  try {
+    const n = await exportBackup();
+    s.textContent = `Backed up ${n} recipe${n === 1 ? '' : 's'}.`;
+  } catch (e) {
+    s.textContent = 'Backup failed: ' + e.message;
+  }
+});
+
+$('import-btn').addEventListener('click', () => $('import-file').click());
+
+$('import-file').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const s = $('setup-status');
+  s.hidden = false;
+  try {
+    const n = await importBackup(file);
+    await refresh();
+    s.textContent = `Restored ${n} recipe${n === 1 ? '' : 's'}.`;
+  } catch (err) {
+    s.textContent = 'Restore failed: ' + err.message;
+  }
+  e.target.value = '';
+});
+
+/* ---- start ---- */
+
+/* The launch URL can carry two things: #keys=... to restore the API keys, and
+   #add=<video url> handed in by the iOS Shortcut.
+
+   This runs on load AND on hashchange. Opening a link while the app is already
+   open only changes the hash — the page is not reloaded and no script re-runs —
+   and iOS routinely reuses an open Home Screen app rather than starting it
+   fresh. Handling load alone would silently do nothing in that case. */
+async function handleLaunchUrl() {
+  const params = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+  const gotKeys = applyKeysFromHash(params);
+  const pendingUrl = params.get('add');
+
+  // Never leave keys sitting in the address bar or a history entry.
+  if (gotKeys || pendingUrl) {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+
+  if (!hasKeys()) {
+    $('setup-extra').hidden = true;
+    show('setup-view');
+    return;
+  }
+
+  if (pendingUrl) {
+    show('add-view');
+    $('add-input').value = pendingUrl;
+    $('add-submit').click();
+  } else if (gotKeys) {
+    await refresh();
+    show('list-view');
+  }
+}
+
+window.addEventListener('hashchange', handleLaunchUrl);
+
+(async function start() {
+  requestPersistence();   // fire and forget; never block the app on it
+  await refresh();
+  if (location.hash) {
+    await handleLaunchUrl();
+  } else if (hasKeys()) {
+    show('list-view');
+  } else {
+    $('setup-extra').hidden = true;
+    show('setup-view');
+  }
+})();
+</script>
+</body>
+</html>
