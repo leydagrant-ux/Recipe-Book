@@ -238,6 +238,7 @@ a{color:var(--accent)}
     <p class="muted">Paste a link to a cooking video.</p>
     <input id="add-input" type="url" placeholder="https://www.instagram.com/reel/..."
            autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button id="paste-clipboard-btn" class="ghost" type="button">Paste from clipboard</button>
     <button id="add-submit" class="primary">Save recipe</button>
     <p id="add-status" class="status" hidden></p>
     <p id="add-error" class="error" hidden></p>
@@ -870,6 +871,39 @@ $('open-add').addEventListener('click', () => {
   $('add-input').focus();
 });
 
+/* iOS Shortcuts' "Open URLs" scans text for links and, given a string with
+   two "https://" substrings, can split on the second one and drop it —
+   confirmed happening in practice when the Shortcut is triggered from inside
+   Instagram's own in-app browser, regardless of URL-encoding upstream. The
+   clipboard sidesteps this: the Shortcut copies the link, then opens the app
+   with a plain marker (#add=clipboard) that contains no embedded URL at all
+   for "Open URLs" to misparse. */
+async function readClipboard() {
+  if (!navigator.clipboard || !navigator.clipboard.readText) return null;
+  try {
+    const text = await navigator.clipboard.readText();
+    return (text || '').trim() || null;
+  } catch {
+    return null;   // permission not yet granted, or no user gesture behind this call
+  }
+}
+
+$('paste-clipboard-btn').addEventListener('click', async () => {
+  const text = await readClipboard();
+  const error = $('add-error');
+  const status = $('add-status');
+  if (!text) {
+    status.hidden = true;
+    error.hidden = false;
+    error.textContent = 'Nothing usable on the clipboard. Copy the video link, then tap this again.';
+    return;
+  }
+  error.hidden = true;
+  status.hidden = true;
+  $('add-input').value = text;
+  $('add-input').focus();
+});
+
 // Belt-and-braces alongside btn.disabled: a launch-triggered .click() and a
 // manual tap could otherwise race before the disabled state paints.
 let saving = false;
@@ -1040,6 +1074,29 @@ async function handleLaunchUrl() {
   if (!hasKeys()) {
     $('setup-extra').hidden = true;
     show('setup-view');
+    return;
+  }
+
+  // The literal word "clipboard" (never a real video link) means the
+  // Shortcut copied the link instead of embedding it in the URL. Read it
+  // and go — if the browser needs a tap-triggered gesture before it hands
+  // over clipboard contents, land on the button that will get one.
+  if (pendingUrl === 'clipboard') {
+    show('add-view');
+    $('add-status').hidden = true;
+    $('add-error').hidden = true;
+    const text = await readClipboard();
+    if (text) {
+      $('add-input').value = text;
+      $('add-submit').click();
+    } else {
+      $('add-input').value = '';
+      const status = $('add-status');
+      status.hidden = false;
+      status.textContent = 'One more tap to finish — Safari needs your permission before an ' +
+        'app opened this way can read the clipboard automatically.';
+      $('paste-clipboard-btn').focus();
+    }
     return;
   }
 
