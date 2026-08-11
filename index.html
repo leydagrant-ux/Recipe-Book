@@ -200,7 +200,7 @@ a{color:var(--accent)}
     <p id="setup-error" class="error" hidden></p>
 
     <div id="setup-extra" hidden>
-      <p id="storage-report" class="status" style="margin-top:22px"></p>
+      <p id="storage-report" class="status" style="margin-top:22px;white-space:pre-line"></p>
       <button id="setup-link-btn" class="ghost">Copy my setup link</button>
       <button id="export-btn" class="ghost">Back up my recipes to a file</button>
       <button id="import-btn" class="ghost">Restore from a backup file</button>
@@ -995,7 +995,20 @@ $('open-settings').addEventListener('click', async () => {
     ? 'Storage is marked permanent — this browser will not clear it automatically.'
     : 'Storage is not marked permanent yet. Add the app to your Home Screen, ' +
       'which protects it, and keep a backup file.';
-  $('storage-report').textContent = `${count}${size}. ${safety}`;
+
+  // navigator.standalone is a real, long-standing WebKit signal: true only
+  // when running from a Home Screen icon that was added while the page still
+  // declared apple-mobile-web-app-capable. That flag is now gone from this
+  // page, but an icon added before it was removed keeps behaving the old way
+  // forever — this is the only reliable way to see that from inside the app,
+  // rather than diagnosing it from a screen recording each time.
+  const mode = navigator.standalone === true
+    ? 'MODE: standalone icon — running in its own separate storage, isolated ' +
+      'from Safari and the Shortcut. If you did not mean to make one of these, ' +
+      'delete this icon and re-add it from a freshly reloaded Safari tab.'
+    : 'MODE: Safari — this shares storage with the Shortcut and with any ' +
+      'bookmark-style icon on your Home Screen.';
+  $('storage-report').textContent = `${mode}\n\n${count}${size}. ${safety}`;
   $('setup-intro').textContent =
     'Your keys are stored only on this device. Back up your recipes here too — ' +
     'they live in this browser, so a backup is the way to move or keep them.';
