@@ -350,7 +350,10 @@ function applyKeys(raw) {
    ?igsh=... and sometimes '&' — survives intact. That keeps the iOS
    Shortcut down to two actions with no URL-encoding step. */
 function parseLaunchHash() {
-  const raw = (location.hash || '').replace(/^#/, '');
+  // Accept the payload in the fragment (#add=) or the query string (?add=),
+  // so it still works if one of them gets mangled in transit.
+  const raw = (location.hash || '').replace(/^#/, '') ||
+              (location.search || '').replace(/^\?/, '');
   if (!raw) return {};
 
   if (raw.startsWith('add=')) {
@@ -359,11 +362,17 @@ function parseLaunchHash() {
       const decoded = decodeURIComponent(value);
       if (decoded) value = decoded;          // handles encoded links too
     } catch { /* not encoded; use as-is */ }
-    return { add: value };
+    // hadAdd distinguishes "launched to save something" from "opened normally".
+    // An empty value here means the sender lost the link on the way in.
+    return { add: value, hadAdd: true };
   }
 
   const params = new URLSearchParams(raw);
-  return { add: params.get('add'), keys: params.get('keys') };
+  return {
+    add: params.get('add'),
+    keys: params.get('keys'),
+    hadAdd: params.has('add'),
+  };
 }
 
 /* ============================ services ============================ */
@@ -897,8 +906,8 @@ async function handleLaunchUrl() {
   applyKeys(parsed.keys);
 
   // Never leave keys sitting in the address bar or a history entry.
-  if (location.hash) {
-    history.replaceState(null, '', location.pathname + location.search);
+  if (location.hash || location.search) {
+    history.replaceState(null, '', location.pathname);
   }
 
   if (!hasKeys()) {
@@ -911,6 +920,22 @@ async function handleLaunchUrl() {
     show('add-view');
     $('add-input').value = pendingUrl;
     $('add-submit').click();
+    return;
+  }
+
+  // Arrived meaning to save something, but the link never made it. Say so
+  // plainly — silently showing the library looks identical to a normal open
+  // and hides the real problem, which is upstream in the Shortcut.
+  if (parsed.hadAdd) {
+    show('add-view');
+    $('add-input').value = '';
+    $('add-status').hidden = true;
+    const error = $('add-error');
+    error.hidden = false;
+    error.textContent =
+      'The Shortcut opened the app but sent an empty link. In the Shortcut, ' +
+      'add a "URL Encode" action before the Text action — otherwise "Open URLs" ' +
+      'splits the address at the second https:// and drops the video link.';
     return;
   }
 
