@@ -357,6 +357,17 @@ function parseLaunchHash() {
               (location.search || '').replace(/^\?/, '');
   if (!raw) return {};
 
+  // Confirmed in practice: typing the static #add=clipboard address on iOS
+  // produced #add-clipboard instead — autocorrect or a stray keystroke turned
+  // "=" into "-", and an exact-match check on "add=" then silently failed to
+  // recognize it at all, landing on the plain library with no error. No real
+  // video link will ever contain the word "clipboard", so treat its presence
+  // anywhere in the hash as the sentinel regardless of the exact punctuation
+  // around it.
+  if (/clipboard/i.test(raw)) {
+    return { add: 'clipboard', hadAdd: true };
+  }
+
   if (raw.startsWith('add=')) {
     let value = raw.slice(4);
     try {
