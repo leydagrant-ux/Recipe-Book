@@ -429,10 +429,16 @@ async function fetchTranscript(url, onProgress) {
 
   if (res.status === 200) return (await res.json()).content || '';
   if (res.status === 206) return '';           // no transcript; caption may still carry it
-  if (res.status === 401) throw new Error('Supadata rejected your API key.');
+  if (res.status === 401) {
+    throw new Error('Supadata rejected your API key. Open ⚙ Settings and tap ' +
+      '"Save keys" again — even unchanged, it re-checks both keys and tells you which is bad.');
+  }
   if (res.status === 403) throw new Error('That video is private or restricted.');
   if (res.status === 404) throw new Error('That video could not be found.');
-  if (res.status === 429) throw new Error('Supadata rate limit or monthly credits exceeded.');
+  if (res.status === 429) {
+    throw new Error('Supadata rate limit or monthly credits exceeded. Check your balance at ' +
+      'dash.supadata.ai — free plan is 100 credits/month, resetting monthly.');
+  }
 
   if (res.status === 202) {
     // Long video: Supadata is generating the transcript in the background.
@@ -521,7 +527,10 @@ async function extractRecipe(sourceText) {
     }),
   });
 
-  if (res.status === 401) throw new Error('Anthropic rejected your API key.');
+  if (res.status === 401) {
+    throw new Error('Anthropic rejected your API key. Open ⚙ Settings and tap ' +
+      '"Save keys" again — even unchanged, it re-checks both keys and tells you which is bad.');
+  }
   if (res.status === 400) {
     const e = await res.json().catch(() => ({}));
     throw new Error(`Anthropic rejected the request: ${(e.error && e.error.message) || 'bad request'}`);
@@ -534,6 +543,39 @@ async function extractRecipe(sourceText) {
   const block = (data.content || []).find((b) => b.type === 'text');
   if (!block) throw new Error('Claude returned no recipe.');
   return JSON.parse(block.text);
+}
+
+/* ============================ key validation ============================ */
+/* Run once, right when a key is saved, using the cheapest possible request
+   for each service — so a typo'd key is caught immediately instead of after
+   burning Supadata credits and waiting a minute to find out. Only a definite
+   401 blocks saving; a network hiccup or an unexpected status is treated as
+   inconclusive rather than rejecting a possibly-good key. */
+
+async function validateAnthropicKey(key) {
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/models', {
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+    });
+    return { ok: res.status !== 401 };
+  } catch {
+    return { ok: true };
+  }
+}
+
+async function validateSupadataKey(key) {
+  try {
+    // No url param, on purpose: a 400 proves the key authenticated without
+    // spending a transcript credit. Only 401 means the key itself is bad.
+    const res = await fetch(`${SUPADATA}/transcript`, { headers: { 'x-api-key': key } });
+    return { ok: res.status !== 401 };
+  } catch {
+    return { ok: true };
+  }
 }
 
 /* The picture is stored as real image data. Some platforms' image servers
@@ -550,6 +592,45 @@ async function downloadImage(imageUrl) {
   } catch { return null; }
 }
 
+/* ============================ retry cache ============================ */
+/* If Anthropic rejects a bad key AFTER Supadata has already been paid for,
+   retrying the same link used to re-run both calls — burning a second
+   Supadata credit for a fetch that already succeeded. This caches what
+   Supadata already returned, keyed by video, so a retry replays it for free
+   and only pays for the step that actually failed. */
+
+const SOURCE_CACHE_KEY = 'rs_pending_source';
+const SOURCE_CACHE_MAX = 10;
+const SOURCE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+function readSourceCache() {
+  try { return JSON.parse(localStorage.getItem(SOURCE_CACHE_KEY) || '{}'); }
+  catch { return {}; }
+}
+
+function getCachedSource(url) {
+  const entry = readSourceCache()[url];
+  if (!entry || Date.now() - entry.fetchedAt > SOURCE_CACHE_TTL_MS) return null;
+  return entry;
+}
+
+function setCachedSource(url, entry) {
+  const map = readSourceCache();
+  map[url] = { ...entry, fetchedAt: Date.now() };
+  const keys = Object.keys(map);
+  if (keys.length > SOURCE_CACHE_MAX) {
+    keys.sort((a, b) => map[a].fetchedAt - map[b].fetchedAt);
+    delete map[keys[0]];
+  }
+  try { localStorage.setItem(SOURCE_CACHE_KEY, JSON.stringify(map)); } catch { /* storage full */ }
+}
+
+function clearCachedSource(url) {
+  const map = readSourceCache();
+  delete map[url];
+  try { localStorage.setItem(SOURCE_CACHE_KEY, JSON.stringify(map)); } catch { /* storage full */ }
+}
+
 /* ============================ save flow ============================ */
 
 async function saveRecipe(rawUrl, onProgress) {
@@ -558,11 +639,18 @@ async function saveRecipe(rawUrl, onProgress) {
   const existing = (await allRecipes()).find((r) => r.reelUrl === url);
   if (existing) return { recipe: existing, alreadySaved: true };
 
-  onProgress('Reading the video…');
-  const { caption, thumbnail } = await fetchMetadata(url);
-
-  onProgress('Getting the spoken transcript…');
-  const transcript = await fetchTranscript(url, onProgress);
+  let caption, thumbnail, transcript;
+  const cached = getCachedSource(url);
+  if (cached) {
+    onProgress('Using what was already fetched — no new Supadata credit spent…');
+    ({ caption, thumbnail, transcript } = cached);
+  } else {
+    onProgress('Reading the video…');
+    ({ caption, thumbnail } = await fetchMetadata(url));
+    onProgress('Getting the spoken transcript…');
+    transcript = await fetchTranscript(url, onProgress);
+    setCachedSource(url, { caption, thumbnail, transcript });
+  }
 
   const parts = [];
   if (caption) parts.push('CAPTION:\n' + caption);
@@ -592,6 +680,7 @@ async function saveRecipe(rawUrl, onProgress) {
     createdAt: new Date().toISOString(),
   };
   record.id = await putRecipe(record);
+  clearCachedSource(url);   // saved successfully — the cached fetch is no longer needed
   return { recipe: record, alreadySaved: false };
 }
 
@@ -781,7 +870,14 @@ $('open-add').addEventListener('click', () => {
   $('add-input').focus();
 });
 
+// Belt-and-braces alongside btn.disabled: a launch-triggered .click() and a
+// manual tap could otherwise race before the disabled state paints.
+let saving = false;
+
 $('add-submit').addEventListener('click', async () => {
+  if (saving) return;
+  saving = true;
+
   const btn = $('add-submit');
   const status = $('add-status');
   const error = $('add-error');
@@ -804,6 +900,7 @@ $('add-submit').addEventListener('click', async () => {
     error.hidden = false;
     error.textContent = err.message;
   } finally {
+    saving = false;
     btn.disabled = false;
   }
 });
@@ -836,14 +933,44 @@ $('save-keys').addEventListener('click', async () => {
   const sup = $('k-supadata').value.trim();
   const ant = $('k-anthropic').value.trim();
   const err = $('setup-error');
+  const btn = $('save-keys');
+
   if (!sup || !ant) {
+    err.className = 'error';
     err.hidden = false;
     err.textContent = 'Both keys are needed.';
     return;
   }
+
+  // Check both keys live, right now, rather than finding out mid-save — a
+  // typo caught here costs nothing; the same typo caught during a save has
+  // already spent a Supadata credit reading the video first.
+  btn.disabled = true;
+  err.className = 'status';
+  err.hidden = false;
+  err.textContent = 'Checking both keys…';
+
+  const [supResult, antResult] = await Promise.all([
+    validateSupadataKey(sup),
+    validateAnthropicKey(ant),
+  ]);
+
+  const problems = [];
+  if (!supResult.ok) problems.push('Supadata rejected that key.');
+  if (!antResult.ok) problems.push('Anthropic rejected that key.');
+
+  if (problems.length) {
+    err.className = 'error';
+    err.textContent = problems.join(' ') +
+      ' Copy it fresh from the source (no extra spaces or a partial paste), then try again.';
+    btn.disabled = false;
+    return;
+  }
+
   localStorage.setItem(KEYS.supadata, sup);
   localStorage.setItem(KEYS.anthropic, ant);
   err.hidden = true;
+  btn.disabled = false;
   await refresh();
   show('list-view');
 });
