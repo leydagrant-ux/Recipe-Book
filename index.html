@@ -331,14 +331,36 @@ function buildSetupLink() {
   return `${location.origin}${location.pathname}#keys=${encodeURIComponent(payload)}`;
 }
 
-function applyKeysFromHash(params) {
-  const raw = params.get('keys');
+function applyKeys(raw) {
   if (!raw) return false;
   const [sup, ant] = raw.split('|');
   if (!sup || !ant) return false;
   localStorage.setItem(KEYS.supadata, sup.trim());
   localStorage.setItem(KEYS.anthropic, ant.trim());
   return true;
+}
+
+/* Read #add=<video url> and #keys=<a|b> off the launch URL.
+
+   #add is taken verbatim after the first '=' rather than through
+   URLSearchParams, so a raw Instagram link — which arrives carrying
+   ?igsh=... and sometimes '&' — survives intact. That keeps the iOS
+   Shortcut down to two actions with no URL-encoding step. */
+function parseLaunchHash() {
+  const raw = (location.hash || '').replace(/^#/, '');
+  if (!raw) return {};
+
+  if (raw.startsWith('add=')) {
+    let value = raw.slice(4);
+    try {
+      const decoded = decodeURIComponent(value);
+      if (decoded) value = decoded;          // handles encoded links too
+    } catch { /* not encoded; use as-is */ }
+    return { add: value };
+  }
+
+  const params = new URLSearchParams(raw);
+  return { add: params.get('add'), keys: params.get('keys') };
 }
 
 /* ============================ services ============================ */
@@ -867,9 +889,8 @@ $('import-file').addEventListener('change', async (e) => {
    and iOS routinely reuses an open Home Screen app rather than starting it
    fresh. Handling load alone would silently do nothing in that case. */
 async function handleLaunchUrl() {
-  const params = new URLSearchParams((location.hash || '').replace(/^#/, ''));
-  const gotKeys = applyKeysFromHash(params);
-  const pendingUrl = params.get('add');
+  const { add: pendingUrl, keys } = parseLaunchHash();
+  const gotKeys = applyKeys(keys);
 
   // Never leave keys sitting in the address bar or a history entry.
   if (gotKeys || pendingUrl) {
