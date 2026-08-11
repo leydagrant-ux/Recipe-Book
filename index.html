@@ -82,12 +82,21 @@ button.ghost{
 }
 
 .warn-banner{
-  display:flex;gap:10px;align-items:flex-start;width:100%;margin:10px 0 0;
-  padding:12px 14px;border:1px solid var(--error);border-radius:var(--radius);
-  background:var(--accent-soft);color:var(--error);font-family:var(--serif);
+  display:flex;gap:6px;align-items:flex-start;width:100%;margin:10px 0 0;
+  padding:10px 8px 10px 14px;border:1px solid var(--error);border-radius:var(--radius);
+  background:var(--accent-soft);color:var(--error);
+}
+.warn-main{
+  display:flex;gap:10px;align-items:flex-start;flex:1;min-width:0;border:none;
+  background:none;padding:2px 0;color:inherit;font-family:var(--serif);
   font-size:14px;line-height:1.45;text-align:left;cursor:pointer;
 }
 .warn-icon{flex:none;font-style:normal;font-size:16px;margin-top:1px}
+.warn-dismiss{
+  flex:none;width:28px;height:28px;border:none;background:none;color:inherit;
+  font-size:18px;line-height:1;cursor:pointer;opacity:.7;
+}
+.warn-dismiss:active{opacity:1}
 
 .cards{display:grid;gap:14px;grid-template-columns:1fr;padding:6px 20px 20px}
 @media (min-width:720px){.cards{grid-template-columns:1fr 1fr}}
@@ -219,11 +228,14 @@ a{color:var(--accent)}
     <button id="open-add" class="icon-btn" aria-label="Add a recipe">+</button>
   </header>
   <div class="pad">
-    <button id="storage-warning" class="warn-banner" hidden type="button">
-      <i class="warn-icon">&#9888;</i>
-      <span>Your recipes aren't protected on this device yet — closing this tab
-        the wrong way could delete them. Tap to back up now.</span>
-    </button>
+    <div id="storage-warning" class="warn-banner" hidden>
+      <button id="storage-warning-main" class="warn-main" type="button">
+        <i class="warn-icon">&#9888;</i>
+        <span>Your recipes aren't protected on this device yet — closing this tab
+          the wrong way could delete them. Tap to back up now.</span>
+      </button>
+      <button id="storage-warning-dismiss" class="warn-dismiss" type="button" aria-label="Dismiss">&times;</button>
+    </div>
     <input id="search" type="search" placeholder="Search by title or ingredient"
            autocomplete="off" autocapitalize="off" spellcheck="false">
   </div>
@@ -771,10 +783,20 @@ async function refresh() {
    grant it at all, since that storage is designed to disappear on its own.
    Surfacing this on the list view, not just buried in Settings, is what
    turns "recipes vanished with no warning" into "back these up before they
-   do." Only shown once there is something worth losing. */
+   do." Only shown once there is something worth losing.
+
+   Dismissing hides it for the rest of this session only (sessionStorage, not
+   localStorage) — it comes back on the next full open if the underlying risk
+   is still real, rather than being silenced for good the first time it's in
+   the way. */
+const STORAGE_WARNING_DISMISSED_KEY = 'rs_storage_warning_dismissed';
+
 async function updateStorageWarning() {
   const banner = $('storage-warning');
-  if (cache.length === 0) { banner.hidden = true; return; }
+  if (cache.length === 0 || sessionStorage.getItem(STORAGE_WARNING_DISMISSED_KEY)) {
+    banner.hidden = true;
+    return;
+  }
   const { persisted } = await storageReport();
   banner.hidden = persisted === true;
 }
@@ -1003,13 +1025,11 @@ $('open-settings').addEventListener('click', async () => {
   // forever — this is the only reliable way to see that from inside the app,
   // rather than diagnosing it from a screen recording each time.
   const mode = navigator.standalone === true
-    ? 'MODE: standalone icon — running in its own separate storage, isolated ' +
-      'from Safari and the Shortcut. On iOS 26, "Add to Home Screen" defaults ' +
-      'to this for every site. Delete this icon, then re-add it from Safari ' +
-      'with the "Open as Web App" toggle switched OFF to get a plain bookmark ' +
-      'that shares storage instead.'
-    : 'MODE: Safari — this shares storage with the Shortcut and with any ' +
-      'bookmark-style icon on your Home Screen.';
+    ? 'MODE: standalone icon — full-screen, with its own separate storage. ' +
+      'Safari and this icon never share recipes or keys with each other, so ' +
+      'always add and view recipes from this one icon, not from Safari.'
+    : 'MODE: Safari — a plain bookmark or browser tab. If you also use a ' +
+      'standalone Home Screen icon, note that the two do not share storage.';
   $('storage-report').textContent = `${mode}\n\n${count}${size}. ${safety}`;
   $('setup-intro').textContent =
     'Your keys are stored only on this device. Back up your recipes here too — ' +
@@ -1017,9 +1037,47 @@ $('open-settings').addEventListener('click', async () => {
   show('setup-view');
 });
 
-$('storage-warning').addEventListener('click', () => $('open-settings').click());
+$('storage-warning-main').addEventListener('click', () => $('open-settings').click());
+
+$('storage-warning-dismiss').addEventListener('click', () => {
+  sessionStorage.setItem(STORAGE_WARNING_DISMISSED_KEY, '1');
+  $('storage-warning').hidden = true;
+});
 
 $('close-setup').addEventListener('click', () => show('list-view'));
+
+/* A standalone Home Screen icon has no address bar, so there is no way to
+   open a setup link inside it directly. Instead, accept the WHOLE copied
+   setup link (or a bare "supadata|anthropic" pair) pasted into either key
+   field, and split it across both — turns "how do I get keys into a fresh
+   icon with no URL bar" into one paste. */
+function trySplitPastedKeys(raw) {
+  let payload = raw.trim();
+  const marker = payload.indexOf('#keys=');
+  if (marker !== -1) {
+    try { payload = decodeURIComponent(payload.slice(marker + 6)); } catch { /* leave as-is */ }
+  }
+  const parts = payload.split('|');
+  if (parts.length === 2 && parts[0].trim() && parts[1].trim()) {
+    return { sup: parts[0].trim(), ant: parts[1].trim() };
+  }
+  return null;
+}
+
+function wireSmartPaste(inputEl) {
+  inputEl.addEventListener('input', () => {
+    const split = trySplitPastedKeys(inputEl.value);
+    if (!split) return;
+    $('k-supadata').value = split.sup;
+    $('k-anthropic').value = split.ant;
+    const err = $('setup-error');
+    err.className = 'status';
+    err.hidden = false;
+    err.textContent = 'Got both keys from the pasted link — review below, then tap Save keys.';
+  });
+}
+wireSmartPaste($('k-supadata'));
+wireSmartPaste($('k-anthropic'));
 
 $('save-keys').addEventListener('click', async () => {
   const sup = $('k-supadata').value.trim();
