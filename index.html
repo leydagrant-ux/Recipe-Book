@@ -82,21 +82,39 @@ button.ghost{
 }
 
 .warn-banner{
-  display:flex;gap:6px;align-items:flex-start;width:100%;margin:10px 0 0;
-  padding:10px 8px 10px 14px;border:1px solid var(--error);border-radius:var(--radius);
+  display:flex;gap:2px;align-items:flex-start;width:100%;margin:10px 0 0;
+  padding:6px 4px 6px 14px;border:1px solid var(--error);border-radius:var(--radius);
   background:var(--accent-soft);color:var(--error);
 }
 .warn-main{
   display:flex;gap:10px;align-items:flex-start;flex:1;min-width:0;border:none;
-  background:none;padding:2px 0;color:inherit;font-family:var(--serif);
+  background:none;padding:8px 0;color:inherit;font-family:var(--serif);
   font-size:14px;line-height:1.45;text-align:left;cursor:pointer;
 }
 .warn-icon{flex:none;font-style:normal;font-size:16px;margin-top:1px}
 .warn-dismiss{
-  flex:none;width:28px;height:28px;border:none;background:none;color:inherit;
-  font-size:18px;line-height:1;cursor:pointer;opacity:.7;
+  flex:none;width:44px;height:44px;border:none;background:none;color:inherit;
+  font-size:20px;line-height:1;cursor:pointer;opacity:.7;
 }
 .warn-dismiss:active{opacity:1}
+
+.cat-chips{
+  display:flex;gap:8px;overflow-x:auto;padding:2px 20px 12px;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+.cat-chips::-webkit-scrollbar{display:none}
+.cat-chip{
+  flex:none;padding:7px 14px;border:1px solid var(--rule);border-radius:999px;
+  background:var(--paper-2);color:var(--ink-soft);font-family:var(--serif);
+  font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;
+}
+.cat-chip.active{background:var(--accent);border-color:var(--accent);color:#fdf8f1}
+
+.cat-select{
+  margin:14px 0 0;padding:8px 12px;border:1px solid var(--rule);border-radius:999px;
+  background:var(--paper-2);color:var(--accent);font-family:var(--serif);font-weight:600;
+  font-size:14px;-webkit-appearance:none;appearance:none;
+}
 
 .cards{display:grid;gap:14px;grid-template-columns:1fr;padding:6px 20px 20px}
 @media (min-width:720px){.cards{grid-template-columns:1fr 1fr}}
@@ -210,6 +228,7 @@ a{color:var(--accent)}
 
     <div id="setup-extra" hidden>
       <p id="storage-report" class="status" style="margin-top:22px;white-space:pre-line"></p>
+      <p id="usage-report" class="status" style="margin-top:14px"></p>
       <button id="setup-link-btn" class="ghost">Copy my setup link</button>
       <button id="export-btn" class="ghost">Back up my recipes to a file</button>
       <button id="import-btn" class="ghost">Restore from a backup file</button>
@@ -236,8 +255,22 @@ a{color:var(--accent)}
       </button>
       <button id="storage-warning-dismiss" class="warn-dismiss" type="button" aria-label="Dismiss">&times;</button>
     </div>
+    <div id="credit-warning" class="warn-banner" hidden>
+      <button id="credit-warning-main" class="warn-main" type="button">
+        <i class="warn-icon">&#9888;</i>
+        <span></span>
+      </button>
+      <button id="credit-warning-dismiss" class="warn-dismiss" type="button" aria-label="Dismiss">&times;</button>
+    </div>
     <input id="search" type="search" placeholder="Search by title or ingredient"
            autocomplete="off" autocapitalize="off" spellcheck="false">
+  </div>
+  <div id="cat-chips" class="cat-chips">
+    <button class="cat-chip active" type="button" data-category="all">All</button>
+    <button class="cat-chip" type="button" data-category="breakfast">Breakfast</button>
+    <button class="cat-chip" type="button" data-category="lunch_dinner">Lunch &amp; dinner</button>
+    <button class="cat-chip" type="button" data-category="dessert">Dessert</button>
+    <button class="cat-chip" type="button" data-category="other">Other</button>
   </div>
   <div id="cards" class="cards"></div>
   <p id="list-empty" class="empty" hidden></p>
@@ -505,6 +538,7 @@ const RECIPE_SCHEMA = {
   properties: {
     is_recipe: { type: 'boolean' },
     title: { type: 'string' },
+    category: { type: 'string', enum: ['breakfast', 'lunch_dinner', 'dessert', 'other'] },
     servings: { anyOf: [{ type: 'string' }, { type: 'null' }] },
     ingredients: {
       type: 'array',
@@ -521,7 +555,7 @@ const RECIPE_SCHEMA = {
     steps: { type: 'array', items: { type: 'string' } },
     notes: { type: 'array', items: { type: 'string' } },
   },
-  required: ['is_recipe', 'title', 'servings', 'ingredients', 'steps', 'notes'],
+  required: ['is_recipe', 'title', 'category', 'servings', 'ingredients', 'steps', 'notes'],
   additionalProperties: false,
 };
 
@@ -529,6 +563,10 @@ const PROMPT = `Below is the spoken transcript and caption from a cooking video.
 Extract the recipe into the given structure.
 
 Rules:
+- category: pick the single best fit — "breakfast" for morning food; "dessert"
+  for sweets, baked goods, and treats meant to follow a meal; "lunch_dinner"
+  for savory mains, sides, and anything eaten as a meal; "other" for drinks,
+  sauces, snacks, and anything that doesn't fit the first three.
 - Write every field in English, regardless of what language the transcript or
   caption is in — including if they mix languages. Translate ingredient names,
   steps, and notes; keep a dish's own name as-is only when that name is what
@@ -617,6 +655,37 @@ async function validateSupadataKey(key) {
   } catch {
     return { ok: true };
   }
+}
+
+const SUPADATA_WARN_THRESHOLD = 0.95;
+
+/* Real numbers from Supadata's own account, not a locally-kept guess — a
+   client-side counter would drift the moment the same key is used from
+   anywhere else, and this endpoint costs nothing to call (confirmed: calling
+   it repeatedly never moves usedCredits). */
+async function fetchSupadataUsage() {
+  try {
+    const res = await fetch(`${SUPADATA}/me`, { headers: { 'x-api-key': getKey('supadata') } });
+    if (!res.ok) return null;
+    const d = await res.json();
+    if (typeof d.usedCredits !== 'number' || typeof d.maxCredits !== 'number') return null;
+    return { used: d.usedCredits, max: d.maxCredits };
+  } catch {
+    return null;
+  }
+}
+
+/* Supadata's dashboard doesn't expose the reset date over the API, only on
+   the website. This account's key was created 2026-08-10 and its credits are
+   confirmed (from that same dashboard) to reset on the 10th of each month —
+   so the 10th is hardcoded here as this account's known reset day, not a
+   general rule for every Supadata plan. */
+function daysUntilSupadataReset() {
+  const RESET_DAY = 10;
+  const now = new Date();
+  let next = new Date(now.getFullYear(), now.getMonth(), RESET_DAY);
+  if (next <= now) next = new Date(now.getFullYear(), now.getMonth() + 1, RESET_DAY);
+  return Math.ceil((next - now) / 86400000);
 }
 
 /* The picture is stored as real image data. Some platforms' image servers
@@ -711,6 +780,7 @@ async function saveRecipe(rawUrl, onProgress) {
   const record = {
     reelUrl: url,
     title: parsed.title,
+    category: CATEGORIES[parsed.category] ? parsed.category : 'other',
     servings: parsed.servings,
     ingredients: parsed.ingredients,
     steps: parsed.steps,
@@ -734,7 +804,15 @@ const show = (id) => { VIEWS.forEach((v) => { $(v).hidden = v !== id; }); window
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g,
   (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+const CATEGORIES = {
+  breakfast: 'Breakfast',
+  lunch_dinner: 'Lunch & dinner',
+  dessert: 'Dessert',
+  other: 'Other',
+};
+
 let cache = [];              // all recipes, newest first
+let activeCategory = 'all';  // 'all' or a CATEGORIES key
 const blobUrls = new Map();  // id -> object URL, so re-renders don't re-create them
 
 function pictureFor(r) {
@@ -747,10 +825,13 @@ function pictureFor(r) {
 
 function renderList(filter = '') {
   const q = filter.trim().toLowerCase();
-  const shown = q
-    ? cache.filter((r) => r.title.toLowerCase().includes(q) ||
-        r.ingredients.some((i) => (i.item || '').toLowerCase().includes(q)))
-    : cache;
+  let shown = activeCategory === 'all'
+    ? cache
+    : cache.filter((r) => (r.category || 'other') === activeCategory);
+  if (q) {
+    shown = shown.filter((r) => r.title.toLowerCase().includes(q) ||
+      r.ingredients.some((i) => (i.item || '').toLowerCase().includes(q)));
+  }
 
   $('cards').innerHTML = shown.map((r) => {
     const first = (r.title.trim().charAt(0) || '?').toUpperCase();
@@ -768,15 +849,49 @@ function renderList(filter = '') {
 
   const empty = $('list-empty');
   empty.hidden = shown.length > 0;
-  empty.textContent = cache.length === 0
-    ? 'No recipes yet. Tap + to save your first video.'
-    : `No recipes match "${filter.trim()}".`;
+  if (cache.length === 0) {
+    empty.textContent = 'No recipes yet. Tap + to save your first video.';
+  } else if (shown.length === 0) {
+    const catLabel = activeCategory === 'all' ? '' : ` in ${CATEGORIES[activeCategory]}`;
+    empty.textContent = q
+      ? `No recipes match "${filter.trim()}"${catLabel}.`
+      : `No recipes${catLabel} yet.`;
+  }
 }
 
 async function refresh() {
   cache = (await allRecipes()).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   renderList($('search').value);
   updateStorageWarning();
+  updateCreditWarning();
+}
+
+/* Checked right after a save actually spends a credit — not on every open,
+   since that would mean a network call every time the app launches for a
+   number that only changes when you save something. Kept in memory only, so
+   it naturally stops being shown once you close and reopen the app; Settings
+   always has the live figure if you want to check any time. */
+const CREDIT_WARNING_DISMISSED_KEY = 'rs_credit_warning_dismissed';
+let creditWarningMessage = null;
+
+function updateCreditWarning() {
+  const banner = $('credit-warning');
+  if (!creditWarningMessage || sessionStorage.getItem(CREDIT_WARNING_DISMISSED_KEY)) {
+    banner.hidden = true;
+    return;
+  }
+  banner.querySelector('span').textContent = creditWarningMessage;
+  banner.hidden = false;
+}
+
+async function checkCreditWarningAfterSave() {
+  const usage = await fetchSupadataUsage();
+  if (usage && usage.max > 0 && usage.used / usage.max >= SUPADATA_WARN_THRESHOLD) {
+    const days = daysUntilSupadataReset();
+    creditWarningMessage = `You've used ${usage.used} of ${usage.max} Supadata credits this ` +
+      `month — resets in ${days} day${days === 1 ? '' : 's'}.`;
+    updateCreditWarning();
+  }
 }
 
 /* Persistence can silently fail to be granted — Private Browsing can never
@@ -815,6 +930,12 @@ async function openDetail(id) {
   parts.push(`<h2 class="recipe-title">${escapeHtml(r.title)}</h2>`);
   if (r.servings) parts.push(`<p class="servings">${escapeHtml(r.servings)}</p>`);
 
+  const currentCat = r.category || 'other';
+  parts.push('<select class="cat-select" id="detail-category">' +
+    Object.entries(CATEGORIES).map(([key, label]) =>
+      `<option value="${key}"${key === currentCat ? ' selected' : ''}>${escapeHtml(label)}</option>`
+    ).join('') + '</select>');
+
   if (r.ingredients.length) {
     parts.push('<h3>Ingredients</h3><ul class="ing-list">' + r.ingredients.map((i) =>
       `<li><span class="qty">${escapeHtml(i.quantity || '')}</span><span>${escapeHtml(i.item)}</span></li>`
@@ -835,6 +956,13 @@ async function openDetail(id) {
     <a href="${escapeHtml(r.reelUrl)}" target="_blank" rel="noopener">the original video</a></p>`);
 
   $('detail-body').innerHTML = parts.join('');
+  $('detail-category').addEventListener('change', async (e) => {
+    const rec = await getRecipe(id);
+    rec.category = e.target.value;
+    await putRecipe(rec);
+    cache = cache.map((c) => (c.id === id ? { ...c, category: rec.category } : c));
+    renderList($('search').value);
+  });
   $('photo-btn').addEventListener('click', () => $('photo-file').click());
   $('photo-file').addEventListener('change', async (e) => {
     const file = e.target.files[0];
@@ -905,6 +1033,16 @@ async function importBackup(file) {
 /* ============================ wiring ============================ */
 
 $('search').addEventListener('input', (e) => renderList(e.target.value));
+
+$('cat-chips').addEventListener('click', (e) => {
+  const chip = e.target.closest('.cat-chip');
+  if (!chip) return;
+  activeCategory = chip.dataset.category;
+  $('cat-chips').querySelectorAll('.cat-chip').forEach((c) => {
+    c.classList.toggle('active', c === chip);
+  });
+  renderList($('search').value);
+});
 
 $('cards').addEventListener('click', (e) => {
   const card = e.target.closest('.card');
@@ -990,6 +1128,7 @@ $('add-submit').addEventListener('click', async () => {
     const { recipe, alreadySaved } = await saveRecipe(url, progress);
     status.textContent = alreadySaved ? 'Already saved.' : 'Saved.';
     $('add-input').value = '';
+    if (!alreadySaved) checkCreditWarningAfterSave();   // fire and forget
     await refresh();
     setTimeout(() => openDetail(recipe.id), 300);
   } catch (err) {
@@ -1035,6 +1174,21 @@ $('open-settings').addEventListener('click', async () => {
     'Your keys are stored only on this device. Back up your recipes here too — ' +
     'they live in this browser, so a backup is the way to move or keep them.';
   show('setup-view');
+
+  // Live from Supadata's own account, not a local guess — shown after the
+  // rest of the screen so a slow network never delays opening Settings.
+  const usageEl = $('usage-report');
+  usageEl.textContent = 'Checking Supadata usage…';
+  fetchSupadataUsage().then((usage) => {
+    if (!usage) {
+      usageEl.textContent = 'Could not check Supadata usage right now.';
+      return;
+    }
+    const days = daysUntilSupadataReset();
+    usageEl.textContent =
+      `${usage.used} of ${usage.max} Supadata credits used this month — ` +
+      `resets in ${days} day${days === 1 ? '' : 's'}.`;
+  });
 });
 
 $('storage-warning-main').addEventListener('click', () => $('open-settings').click());
@@ -1042,6 +1196,13 @@ $('storage-warning-main').addEventListener('click', () => $('open-settings').cli
 $('storage-warning-dismiss').addEventListener('click', () => {
   sessionStorage.setItem(STORAGE_WARNING_DISMISSED_KEY, '1');
   $('storage-warning').hidden = true;
+});
+
+$('credit-warning-main').addEventListener('click', () => $('open-settings').click());
+
+$('credit-warning-dismiss').addEventListener('click', () => {
+  sessionStorage.setItem(CREDIT_WARNING_DISMISSED_KEY, '1');
+  $('credit-warning').hidden = true;
 });
 
 $('close-setup').addEventListener('click', () => show('list-view'));
