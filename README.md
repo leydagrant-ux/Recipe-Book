@@ -34,13 +34,26 @@ They're stored only in your own browser and are sent straight to each service.
 They are never uploaded to the site host or anywhere else — the page has no
 server to send them to.
 
-Then **Share → Add to Home Screen** in Safari. It launches full-screen.
+Then **Share → Add to Home Screen** in Safari.
+
+**On iOS 26, watch for the "Open as Web App" toggle** in that sheet — it
+defaults to **on** for every site, no matter what the site itself asks for.
+Leave it on and you get a full-screen icon with its own separate storage,
+sharing nothing with Safari. **Turn it off** to get a plain bookmark that opens
+in Safari and shares the same recipes, keys, and everything else. This is an
+iOS setting, not something the app can control — there's no way to fix it from
+the page's own code.
+
+If you already made an icon before reading this: delete it and redo Add to
+Home Screen with the toggle off. An icon made with the toggle on can't be
+converted after the fact.
 
 ### If it keeps asking for your keys
 
-On iOS, a Home Screen web app has **its own storage, separate from Safari**.
-Keys typed into Safari do not appear in the Home Screen app, and vice versa. So
-does Private Browsing, which wipes storage the moment you close the tab.
+On iOS, a standalone web app (the toggle above left on) has **its own storage,
+separate from Safari**. Keys typed into Safari do not appear there, and vice
+versa. So does Private Browsing, which wipes storage the moment you close the
+tab.
 
 The permanent fix is a **setup link** — a URL with your keys built into it:
 

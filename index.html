@@ -1004,8 +1004,10 @@ $('open-settings').addEventListener('click', async () => {
   // rather than diagnosing it from a screen recording each time.
   const mode = navigator.standalone === true
     ? 'MODE: standalone icon — running in its own separate storage, isolated ' +
-      'from Safari and the Shortcut. If you did not mean to make one of these, ' +
-      'delete this icon and re-add it from a freshly reloaded Safari tab.'
+      'from Safari and the Shortcut. On iOS 26, "Add to Home Screen" defaults ' +
+      'to this for every site. Delete this icon, then re-add it from Safari ' +
+      'with the "Open as Web App" toggle switched OFF to get a plain bookmark ' +
+      'that shares storage instead.'
     : 'MODE: Safari — this shares storage with the Shortcut and with any ' +
       'bookmark-style icon on your Home Screen.';
   $('storage-report').textContent = `${mode}\n\n${count}${size}. ${safety}`;
