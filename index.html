@@ -5,9 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Recipes</title>
 <meta name="theme-color" content="#a8401c">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<!-- Deliberately NOT apple-mobile-web-app-capable. That meta tag is what makes
+     an "Add to Home Screen" icon launch in its own isolated storage container,
+     separate from Safari — and iOS has no way to deep-link a Shortcut into
+     that container. Leaving it off makes the icon a plain bookmark that opens
+     as a normal Safari tab, so the Shortcut and the icon share one library. -->
 <meta name="apple-mobile-web-app-title" content="Recipes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="data:image/png;base64,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">
 <style>
 :root{
