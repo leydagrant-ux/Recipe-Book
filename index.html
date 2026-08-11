@@ -81,6 +81,14 @@ button.ghost{
   font-family:var(--serif);font-weight:600;cursor:pointer;
 }
 
+.warn-banner{
+  display:flex;gap:10px;align-items:flex-start;width:100%;margin:10px 0 0;
+  padding:12px 14px;border:1px solid var(--error);border-radius:var(--radius);
+  background:var(--accent-soft);color:var(--error);font-family:var(--serif);
+  font-size:14px;line-height:1.45;text-align:left;cursor:pointer;
+}
+.warn-icon{flex:none;font-style:normal;font-size:16px;margin-top:1px}
+
 .cards{display:grid;gap:14px;grid-template-columns:1fr;padding:6px 20px 20px}
 @media (min-width:720px){.cards{grid-template-columns:1fr 1fr}}
 .card{
@@ -211,6 +219,11 @@ a{color:var(--accent)}
     <button id="open-add" class="icon-btn" aria-label="Add a recipe">+</button>
   </header>
   <div class="pad">
+    <button id="storage-warning" class="warn-banner" hidden type="button">
+      <i class="warn-icon">&#9888;</i>
+      <span>Your recipes aren't protected on this device yet — closing this tab
+        the wrong way could delete them. Tap to back up now.</span>
+    </button>
     <input id="search" type="search" placeholder="Search by title or ingredient"
            autocomplete="off" autocapitalize="off" spellcheck="false">
   </div>
@@ -504,6 +517,10 @@ const PROMPT = `Below is the spoken transcript and caption from a cooking video.
 Extract the recipe into the given structure.
 
 Rules:
+- Write every field in English, regardless of what language the transcript or
+  caption is in — including if they mix languages. Translate ingredient names,
+  steps, and notes; keep a dish's own name as-is only when that name is what
+  English speakers commonly call it (e.g. "Tteokbokki", "Paella").
 - Use only what the creator states or clearly implies. Never invent a quantity
   you were not given — set quantity to null instead.
 - quantity is the amount as spoken ("2 cups", "a big pinch", "1 tbsp"), item is
@@ -747,6 +764,19 @@ function renderList(filter = '') {
 async function refresh() {
   cache = (await allRecipes()).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   renderList($('search').value);
+  updateStorageWarning();
+}
+
+/* Persistence can silently fail to be granted — Private Browsing can never
+   grant it at all, since that storage is designed to disappear on its own.
+   Surfacing this on the list view, not just buried in Settings, is what
+   turns "recipes vanished with no warning" into "back these up before they
+   do." Only shown once there is something worth losing. */
+async function updateStorageWarning() {
+  const banner = $('storage-warning');
+  if (cache.length === 0) { banner.hidden = true; return; }
+  const { persisted } = await storageReport();
+  banner.hidden = persisted === true;
 }
 
 let openId = null;
@@ -971,6 +1001,8 @@ $('open-settings').addEventListener('click', async () => {
     'they live in this browser, so a backup is the way to move or keep them.';
   show('setup-view');
 });
+
+$('storage-warning').addEventListener('click', () => $('open-settings').click());
 
 $('close-setup').addEventListener('click', () => show('list-view'));
 
