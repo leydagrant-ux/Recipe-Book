@@ -889,11 +889,12 @@ $('import-file').addEventListener('change', async (e) => {
    and iOS routinely reuses an open Home Screen app rather than starting it
    fresh. Handling load alone would silently do nothing in that case. */
 async function handleLaunchUrl() {
-  const { add: pendingUrl, keys } = parseLaunchHash();
-  const gotKeys = applyKeys(keys);
+  const parsed = parseLaunchHash();
+  const pendingUrl = (parsed.add || '').trim();
+  applyKeys(parsed.keys);
 
   // Never leave keys sitting in the address bar or a history entry.
-  if (gotKeys || pendingUrl) {
+  if (location.hash) {
     history.replaceState(null, '', location.pathname + location.search);
   }
 
@@ -907,24 +908,42 @@ async function handleLaunchUrl() {
     show('add-view');
     $('add-input').value = pendingUrl;
     $('add-submit').click();
-  } else if (gotKeys) {
-    await refresh();
-    show('list-view');
+    return;
   }
+
+  // Every path above ends in a visible view, and so must this one. A launch
+  // URL that carries nothing usable (an empty #add=, say) previously fell
+  // through every branch and left all views hidden — a blank page.
+  await refresh();
+  show('list-view');
 }
 
 window.addEventListener('hashchange', handleLaunchUrl);
 
-(async function start() {
-  requestPersistence();   // fire and forget; never block the app on it
-  await refresh();
-  if (location.hash) {
-    await handleLaunchUrl();
-  } else if (hasKeys()) {
+/* Last line of defence. On a phone there are no developer tools, so an
+   uncaught error must not leave a silent blank page — show what broke. */
+function showFatal(message) {
+  try {
     show('list-view');
-  } else {
-    $('setup-extra').hidden = true;
-    show('setup-view');
+    const empty = $('list-empty');
+    empty.hidden = false;
+    empty.textContent = 'The app hit a problem starting up: ' + message;
+  } catch { /* nothing left to try */ }
+}
+
+window.addEventListener('error', (e) => {
+  if (document.querySelectorAll('.view:not([hidden])').length === 0) {
+    showFatal(e.message || 'unknown error');
+  }
+});
+
+(async function start() {
+  try {
+    requestPersistence();   // fire and forget; never block the app on it
+    await refresh();
+    await handleLaunchUrl();   // covers both the hash and no-hash cases
+  } catch (err) {
+    showFatal(err && err.message ? err.message : String(err));
   }
 })();
 </script>
