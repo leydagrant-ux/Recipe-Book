@@ -585,6 +585,15 @@ Rules:
 - notes: the creator's own substitutions, storage advice, serving suggestions,
   and any tips that are not a cooking step.
 - servings: only if stated (e.g. "serves 4"), otherwise null.
+- The CAPTION, the TRANSCRIPT and any ON-SCREEN TEXT are views of the same
+  recipe. The caption and on-screen text usually carry the precise written
+  amounts, while the spoken transcript goes vague ("these spices") because the
+  creator is pointing at the screen. Always prefer the written specifics and
+  merge all sources into one complete list.
+- Never output a grouped placeholder like "assorted spices", "seasonings" or
+  "spice mix" as a single ingredient when any source names what they are.
+  Expand it into the individual ingredients, each with its own quantity. Only
+  fall back to a general term if no source ever names the components.
 - If this video is not a recipe at all, set is_recipe to false and leave the
   other fields empty.
 
@@ -693,6 +702,74 @@ function daysUntilSupadataReset() {
   return Math.ceil((next - now) / 86400000);
 }
 
+/* ==================== on-screen text (visual re-scan) ==================== */
+/* Supadata's /extract analyses what is SEEN as well as heard, so it picks up
+   ingredient lists that only ever appear as a text overlay — the exact case
+   where a creator says "add these spices" while pointing at the screen.
+
+   It costs ~5 credits per video minute versus ~2 for a normal save, so this
+   only runs when the first pass actually came back vague. Verified on a real
+   reel: the spoken transcript said only "these spices", while this returned
+   cumin, coriander, garam masala, chili powder, salt and sugar. */
+
+const VAGUE_INGREDIENT_RE =
+  /\b(assorted|seasoning|spice|spices|spice mix|seasonings|toppings|herbs)\b/i;
+
+/* A grouped placeholder is only a problem when it stands in for real
+   ingredients. "1 tsp mixed herbs" is a genuine measured item; a bare
+   "seasonings" with no quantity is a gap worth paying to fill. */
+function findVagueIngredients(ingredients) {
+  return (ingredients || []).filter((i) => {
+    const item = (i.item || '').trim();
+    if (!VAGUE_INGREDIENT_RE.test(item)) return false;
+    const wordCount = item.split(/\s+/).length;
+    return !i.quantity || wordCount <= 3;
+  });
+}
+
+async function fetchOnScreenText(url, onProgress) {
+  const body = {
+    url,
+    prompt: 'Read all text that appears visually on screen in this video, ' +
+            'especially ingredient lists, seasoning names and quantities shown ' +
+            'as text overlays. Transcribe them exactly as written.',
+    schema: {
+      type: 'object',
+      properties: {
+        on_screen_text: { type: 'array', items: { type: 'string' } },
+      },
+      required: ['on_screen_text'],
+    },
+  };
+
+  const res = await fetch(`${SUPADATA}/extract`, {
+    method: 'POST',
+    headers: { 'x-api-key': getKey('supadata'), 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (res.status !== 200 && res.status !== 202) return null;
+
+  const { jobId } = await res.json();
+  if (!jobId) return null;
+
+  // Extract is slower than a transcript — allow up to three minutes.
+  const deadline = Date.now() + 180000;
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 2000));
+    onProgress && onProgress('Reading the text shown on screen…');
+    const poll = await fetch(`${SUPADATA}/extract/${jobId}`,
+      { headers: { 'x-api-key': getKey('supadata') } });
+    if (!poll.ok) return null;
+    const d = await poll.json();
+    if (d.status === 'completed') {
+      const lines = (d.data && d.data.on_screen_text) || [];
+      return Array.isArray(lines) && lines.length ? lines.join('\n') : null;
+    }
+    if (d.status === 'failed') return null;
+  }
+  return null;
+}
+
 /* The picture is stored as real image data. Some platforms' image servers
    refuse cross-origin reads; if that happens we fall back to remembering the
    link, and you can attach your own photo instead. */
@@ -774,10 +851,33 @@ async function saveRecipe(rawUrl, onProgress) {
   if (!sourceText) throw new Error('That video has no caption or spoken words to read.');
 
   onProgress('Writing up the recipe…');
-  const parsed = await extractRecipe(sourceText);
+  let parsed = await extractRecipe(sourceText);
   if (!parsed.is_recipe) throw new Error('That video does not look like a recipe.');
   if (!parsed.ingredients.length && !parsed.steps.length) {
     throw new Error('No ingredients or steps could be found in that video.');
+  }
+
+  /* If the recipe came back with grouped placeholders like "assorted
+     seasonings", the specifics were almost certainly only ever shown on
+     screen. Pay for the visual re-scan just for those videos, then re-extract
+     with the on-screen text added. Any failure here leaves the original
+     recipe untouched — a vague recipe beats no recipe. */
+  let finalSource = sourceText;
+  const vague = findVagueIngredients(parsed.ingredients);
+  if (vague.length) {
+    try {
+      onProgress('Ingredients look vague — checking the video for on-screen text…');
+      const onScreen = await fetchOnScreenText(url, onProgress);
+      if (onScreen) {
+        const enriched = `${sourceText}\n\nON-SCREEN TEXT:\n${onScreen}`;
+        onProgress('Rewriting with the on-screen ingredients…');
+        const second = await extractRecipe(enriched);
+        if (second.is_recipe && second.ingredients.length >= parsed.ingredients.length) {
+          parsed = second;
+          finalSource = enriched;
+        }
+      }
+    } catch { /* keep the first-pass recipe */ }
   }
 
   const image = await downloadImage(thumbnail);
@@ -792,7 +892,7 @@ async function saveRecipe(rawUrl, onProgress) {
     notes: parsed.notes,
     image,                       // Blob, or null
     imageUrl: image ? null : thumbnail,
-    sourceText,
+    sourceText: finalSource,
     createdAt: new Date().toISOString(),
   };
   record.id = await putRecipe(record);
